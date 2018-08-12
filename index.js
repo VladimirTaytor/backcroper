@@ -5,6 +5,11 @@
 const fs = require('fs');
 const sharp = require('sharp');
 
+const config = {}; // Ha-ha
+
+const fileName = config.name || 'input';
+const fileExtension = '.png';
+
 const size1 = 27;
 const side1 = '16:9';
 const resolution1 = '1920x1080';
@@ -28,7 +33,8 @@ function geInfo(size, side, resolution) {
 const screen1 = geInfo(size1, side1, resolution1);
 const screen2 = geInfo(size2, side2, resolution2);
 
-const image = sharp(fs.readFileSync('./input.jpg'));
+// TODO use pipeline, and one fs stream
+const image = sharp(fs.readFileSync(`./${fileName}${fileExtension}`));
 
 const leftOffset = Math.round(((Math.abs(screen1[0] - screen2[0])) / 2) * screen2[2]);
 
@@ -42,10 +48,10 @@ image
       .extract({ left: Math.round(index / 2), top: 0, width: Math.round(metadata.width - index / 2) , height: Math.round(metadata.height / 2) - 50})
       .resize(screen1[3], screen1[4])
       .crop(sharp.strategy.center)
-      .toFile('output.jpg');
+      .toFile(`output1-${Date.now()}.jpg`);
   });
 
-const image2 = sharp(fs.readFileSync('./input.jpg'));
+const image2 = sharp(fs.readFileSync(`./${fileName}${fileExtension}`));
 image2
   .metadata()
   .then(function(metadata) {
@@ -53,5 +59,5 @@ image2
       .extract({ left: index, top: Math.round(metadata.height / 2), width: metadata.width - index, height: Math.round(metadata.height / 2) - index })
       .resize(screen2[3], screen2[4])
       .crop(sharp.strategy.center)
-      .toFile('output2.jpg');
+      .toFile(`output2-${Date.now()}.jpg`);
   });

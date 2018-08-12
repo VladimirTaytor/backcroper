@@ -12,6 +12,8 @@ output2.jpg
 output.jpg
 node_modules
 inputs
+output1-*.jpg
+output2-*.jpg
 
 # Icon must end with two \r
 Icon
