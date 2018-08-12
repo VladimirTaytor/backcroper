@@ -8,7 +8,7 @@ const sharp = require('sharp');
 const config = {}; // Ha-ha
 
 const fileName = config.name || 'input';
-const fileExtension = '.png';
+const fileExtension = '.jpg';
 
 const size1 = 27;
 const side1 = '16:9';
@@ -18,7 +18,12 @@ const size2 = 13.3;
 const side2 = '16:10';
 const resolution2 = '2560x1600';
 
-const index = 450; // idk what is it
+const index = 450;               // idk what is it
+const anotherIndex = 1.5;        // and this too,
+                                 // perhaps depend on how far is yor second display,
+                                 // and src image aspect ratio
+
+const sizeOfTopScreenFrame = 40; // this black thing where is your web-cam on MacBook
 
 function geInfo(size, side, resolution) {
   const sides = side.split(':');
@@ -33,31 +38,30 @@ function geInfo(size, side, resolution) {
 const screen1 = geInfo(size1, side1, resolution1);
 const screen2 = geInfo(size2, side2, resolution2);
 
-// TODO use pipeline, and one fs stream
-const image = sharp(fs.readFileSync(`./${fileName}${fileExtension}`));
-
 const leftOffset = Math.round(((Math.abs(screen1[0] - screen2[0])) / 2) * screen2[2]);
 
 console.log(`Image should be min ${screen2[3] + leftOffset}x${screen2[4]+screen1[4]}`);
 
-image
-  .metadata()
-  .then(function(metadata) {
-    const halfOfImage = Math.round(metadata.width / 2) - Math.round(screen1[3] / 2); // is good for already resized images
-    return image
-      .extract({ left: Math.round(index / 2), top: 0, width: Math.round(metadata.width - index / 2) , height: Math.round(metadata.height / 2) - 50})
-      .resize(screen1[3], screen1[4])
-      .crop(sharp.strategy.center)
-      .toFile(`output1-${Date.now()}.jpg`);
-  });
+fs.readFile(`./${fileName}${fileExtension}`, (err, stream) => {
+  const src = sharp(stream);
+  const image1 = src.clone();
+  const image2 = src.clone();
 
-const image2 = sharp(fs.readFileSync(`./${fileName}${fileExtension}`));
-image2
-  .metadata()
-  .then(function(metadata) {
-    return image2
-      .extract({ left: index, top: Math.round(metadata.height / 2), width: metadata.width - index, height: Math.round(metadata.height / 2) - index })
-      .resize(screen2[3], screen2[4])
-      .crop(sharp.strategy.center)
-      .toFile(`output2-${Date.now()}.jpg`);
-  });
+  image1.metadata()
+    .then(function(metadata) {
+      return image1
+        .extract({ left: Math.round(index / anotherIndex), top: 0, width: Math.round(metadata.width - index / anotherIndex) , height: Math.round(metadata.height / 2) - sizeOfTopScreenFrame})
+        .resize(screen1[3], screen1[4])
+        .crop(sharp.strategy.center)
+        .toFile(`output1-${Date.now()}.jpg`);
+    });
+
+  image2.metadata()
+    .then(function(metadata) {
+      return image2
+        .extract({ left: index, top: Math.round(metadata.height / 2), width: metadata.width - index, height: Math.round(metadata.height / 2) - index })
+        .resize(screen2[3], screen2[4])
+        .crop(sharp.strategy.center)
+        .toFile(`output2-${Date.now()}.jpg`);
+    });
+});
